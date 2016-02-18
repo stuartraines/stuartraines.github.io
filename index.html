@@ -291,7 +291,20 @@
 	<script type="text/javascript">
 		$(function() {
 		
-			var map, coords;
+			var map, coords, markers = [];	
+
+			var contentString = '<div id="content">'+
+								  '<div id="siteNotice">'+
+								  '</div>'+
+								  '<h1 id="firstHeading" class="firstHeading">Heading</h1>'+
+								  '<div id="bodyContent">'+
+								  '<p>Some info about the marked location</p>'+
+								  '</div>'+
+								  '</div>';
+			
+			var infowindow = new google.maps.InfoWindow({
+				content: contentString
+			  });			
 			
 			$("#btn-search-location").on("click", function() {
 				var locationSearch = $("#location").val();
@@ -307,6 +320,7 @@
 				
 				if (searchTerm > "") {
 					$("#results").show("fast");
+					drop();
 					return false;
 				}			
 			});
@@ -314,7 +328,7 @@
 			$("#btn-accept-location").on("click", function() {
 				$("#pre, #overlay").fadeOut('slow');
 				$(".blur").addClass("noblur");
-				$("#btn-edit-location").fadeIn('slow');
+				$("#btn-edit-location").fadeIn('slow', function() { drop(); });				
 			});
 			
 			$("#btn-edit-location").on("click", function() {
@@ -341,7 +355,7 @@
 				coords = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
 				  
 				  var options = {
-					zoom: 15,
+					zoom: 14,
 					center: coords,
 					mapTypeControl: false,
 					navigationControlOptions: {
@@ -381,6 +395,40 @@
 			
 				map = new google.maps.Map(document.getElementById("mapcontainer"), options);
 			}
+			
+			function drop() {
+			  clearMarkers();
+			  for (var i = 0; i < generateRandom(3,10); i++) {
+				addMarkerWithTimeout({ lat: coords.lat() + generateRandom(-0.01, 0.01), lng: coords.lng() + generateRandom(-0.01, 0.01)}, i * 200);
+			  }
+			}
+			
+			function generateRandom(min, max) {
+				return (Math.random() * (max - min) + min);
+			}
+			
+			function addMarkerWithTimeout(position, timeout) {
+			  window.setTimeout(function() {
+				var marker = new google.maps.Marker({
+				  position: position,
+				  map: map,
+				  animation: google.maps.Animation.DROP
+				});
+				markers.push(marker);
+				
+				marker.addListener('click', function() {
+					infowindow.open(map, marker);
+				  });				
+				
+			  }, timeout);
+			}			
+			
+			function clearMarkers() {
+			  for (var i = 0; i < markers.length; i++) {
+				markers[i].setMap(null);
+			  }
+			  markers = [];
+			}			
 		});
 	</script>
   </body>
